@@ -30,7 +30,7 @@ header{background:var(--header);color:#fff;padding:15px;display:flex;align-items
 .product img{width:100%;max-width:180px;border-radius:10px;cursor:pointer}
 button{background:#111;color:#fff;border:none;padding:10px;border-radius:8px;cursor:pointer;margin-top:8px}
 #cartDrawer{position:fixed;top:0;left:-380px;width:380px;height:100%;background:var(--card);box-shadow:2px 0 15px rgba(0,0,0,.4);z-index:1000;transition:.4s;padding:20px;overflow-y:auto}
-#productPage,#checkoutSection,#thankYou{display:none}
+#productPage,#thankYou{display:none}
 .footer{background:#111;color:#fff;text-align:center;padding:25px;margin-top:60px}
 </style>
 </head>
@@ -60,8 +60,8 @@ button{background:#111;color:#fff;border:none;padding:10px;border-radius:8px;cur
 <p>החנות נעליים הזולה בארץ</p>
 <p>מגיעים לאזור חיפה בלבד</p>
 <p>קוד קופון ל-10% הנחה: <b>YANIS25</b></p>
-<div class="products-grid" id="products"></div>
 </div>
+<div id="products" class="products-grid"></div>
 
 <div id="productPage">
 <button onclick="backToProducts()">⬅ חזרה</button>
@@ -71,15 +71,6 @@ button{background:#111;color:#fff;border:none;padding:10px;border-radius:8px;cur
 <select id="pSize"></select>
 <button onclick="addFromPage()">הוסף לעגלה</button>
 </div>
-
-<div id="checkoutSection" class="container">
-<h2>פרטי הזמנה</h2>
-<input type="text" id="coupon" placeholder="קוד קופון" />
-<input type="text" id="name" placeholder="שם מלא" />
-<input type="text" id="address" placeholder="כתובת, עיר, מספר בית" />
-<input type="text" id="door" placeholder="מספר דלת (לא חובה)" />
-<input type="text" id="floor" placeholder="קומה (לא חובה)" />
-<button onclick="confirmOrder()">אשר הזמנה</button>
 </div>
 
 <div id="cartDrawer">
@@ -104,36 +95,46 @@ button{background:#111;color:#fff;border:none;padding:10px;border-radius:8px;cur
 </div>
 
 <script>
-// המוצרים
-const productsData={
-dior:[{name:'DIOR B30',price:280,img:'images/m73283993917_1.avif',sizes:['36','37','38','39','40','41','42','43','44','45']}],
-lv:[{name:'LV Skates',price:280,img:'images/lv-skate-sneaker-sizing-v0-br5iv593pgzd1.webp',sizes:['36','37','38','39','40','41','42','43','44','45']}],
-asics:[
-{name:'ASICS GEL NYC Black & White',price:250,img:'images/ASICS-Gel-NYC-Graphite-Grey-Black-Product.avif',sizes:['36','37','38','39','40','41','42','43','44','45']},
-{name:'ASICS GEL NYC Grey Oyster',price:250,img:'images/26768432_350_A.jpg',sizes:['36','37','38','39','40','41','42','43','44','45']},
-{name:'ASICS GEL NYC Black Beige',price:250,img:'images/29321140_58424553_1000.webp',sizes:['36','37','38','39','40','41','42','43','44','45']}
-],
-newbalance:[{name:'NB 9060',price:250,img:'images/812341.jpg',sizes:['36','37','38','39','40','41','42','43','44','45']}],
-nike_tech:[{name:'Nike Tech',price:250,img:'images/Nike tech',sizes:['XS','S','M','L','XL']}],
-world:[{name:'World Suit',price:280,img:'images/syna-world-tracksuit.webp',sizes:['XS','S','M','L','XL']}]
+const productsData = {
+  dior: [
+    {name:'DIOR B30', price:280, img:'images/m73283993917_1.avif', sizes:['36','37','38','39','40','41','42','43']}
+  ],
+  lv: [
+    {name:'LV Skates', price:280, img:'images/lv-skate-sneaker-sizing-v0-br5iv593pgzd1.webp', sizes:['36','37','38','39','40','41','42','43']}
+  ],
+  asics: [
+    {name:'ASICS GEL NYC Black & White', price:250, img:'images/ASICS-Gel-NYC-Graphite-Grey-Black-Product.avif', sizes:['36','37','38','39','40','41','42','43']},
+    {name:'ASICS GEL NYC Grey & Black', price:250, img:'images/26768432_350_A.jpg', sizes:['36','37','38','39','40','41','42','43']},
+    {name:'ASICS GEL NYC Oyster Grey', price:250, img:'images/29321140_58424553_1000.webp', sizes:['36','37','38','39','40','41','42','43']},
+    {name:'ASICS GEL NYC Black Beige', price:250, img:'images/812341.jpg', sizes:['36','37','38','39','40','41','42','43']}
+  ],
+  newbalance: [
+    {name:'NB 9060', price:250, img:'images/29321140_58424553_1000.webp', sizes:['36','37','38','39','40','41','42','43']}
+  ],
+  nike_tech: [
+    {name:'Nike Tech Jacket', price:250, img:'images/100229223513000_0_1733388242762.jpg', sizes:['S','M','L','XL']}
+  ],
+  world: [
+    {name:'World Suit', price:280, img:'images/syna-world-tracksuit.webp', sizes:['S','M','L','XL']}
+  ]
 };
 
-let cart=JSON.parse(localStorage.getItem('cart')||'[]');
-let current=null;
+let cart = JSON.parse(localStorage.getItem('cart')||'[]');
+let current = null;
 
 function saveCart(){localStorage.setItem('cart',JSON.stringify(cart));updateCart();}
 function updateCart(){
-    document.getElementById('cartItems').innerHTML='';
-    let t=0;
-    cart.forEach((i,idx)=>{
-        t+=i.price;
-        const li=document.createElement('li');
-        li.textContent=`${i.name} ${i.size} ₪${i.price}`;
-        li.onclick=()=>{cart.splice(idx,1);saveCart()};
-        document.getElementById('cartItems').appendChild(li);
-    });
-    document.getElementById('total').innerText=t;
-    document.getElementById('cartCount').innerText=cart.length;
+  document.getElementById('cartItems').innerHTML='';
+  let t=0;
+  cart.forEach((i,idx)=>{
+    t+=i.price;
+    const li=document.createElement('li');
+    li.textContent=`${i.name} ${i.size} ₪${i.price}`;
+    li.onclick=()=>{cart.splice(idx,1);saveCart();}
+    document.getElementById('cartItems').appendChild(li);
+  });
+  document.getElementById('total').innerText=t;
+  document.getElementById('cartCount').innerText=cart.length;
 }
 
 function openCart(){document.getElementById('cartDrawer').style.left='0'}
@@ -142,78 +143,41 @@ function openNav(){document.getElementById('mySidebar').style.width='250px'}
 function toggleDark(){document.body.classList.toggle('dark');localStorage.setItem('dark',document.body.classList.contains('dark'))}
 if(localStorage.getItem('dark')==='true')document.body.classList.add('dark');
 
-function showHome(){
-    document.getElementById('products').innerHTML='';
-    document.getElementById('productPage').style.display='none';
-    document.getElementById('checkoutSection').style.display='none';
-    document.getElementById('thankYou').style.display='none';
-}
-
+function showHome(){document.getElementById('products').innerHTML='';document.getElementById('productPage').style.display='none';document.getElementById('thankYou').style.display='none'}
 function showCategory(cat){
-    const p=document.getElementById('products');
-    p.innerHTML='';
-    productsData[cat].forEach(pr=>{
-        const d=document.createElement('div');
-        d.className='product';
-        d.innerHTML=`<img src='${pr.img}' onclick="openProduct('${pr.name}','${cat}')"><p>${pr.name} ₪${pr.price}</p>`;
-        p.appendChild(d);
-    });
-    document.getElementById('mySidebar').style.width='0';
+  const p=document.getElementById('products'); p.innerHTML='';
+  productsData[cat].forEach(pr=>{
+    const d=document.createElement('div'); d.className='product';
+    d.innerHTML=`<img src='${pr.img}' onclick="openProduct('${pr.name}','${cat}')"><p>${pr.name} ₪${pr.price}</p>`;
+    p.appendChild(d);
+  });
+  document.getElementById('mySidebar').style.width='0';
 }
-
 function openProduct(name,cat){
-    current=productsData[cat].find(p=>p.name===name);
-    document.getElementById('products').innerHTML='';
-    document.getElementById('productPage').style.display='block';
-    document.getElementById('pName').innerText=current.name;
-    document.getElementById('pImg').src=current.img;
-    document.getElementById('pPrice').innerText='₪'+current.price;
-    const s=document.getElementById('pSize');
-    s.innerHTML='<option disabled selected>בחר מידה</option>';
-    current.sizes.forEach(sz=>s.innerHTML+=`<option>${sz}</option>`);
+  current=productsData[cat].find(p=>p.name===name);
+  document.getElementById('products').innerHTML='';
+  document.getElementById('productPage').style.display='block';
+  document.getElementById('pName').innerText=current.name;
+  document.getElementById('pImg').src=current.img;
+  document.getElementById('pPrice').innerText='₪'+current.price;
+  const s=document.getElementById('pSize');
+  s.innerHTML='<option disabled selected>בחר מידה</option>';
+  current.sizes.forEach(sz=>s.innerHTML+=`<option>${sz}</option>`);
 }
-
 function backToProducts(){document.getElementById('productPage').style.display='none'}
-
 function addFromPage(){
-    const sz=document.getElementById('pSize').value;
-    if(!sz)return alert('בחר מידה');
-    cart.push({name:current.name,price:current.price,size:sz});
-    saveCart();
-    openCart();
+  const sz=document.getElementById('pSize').value;
+  if(!sz) return alert('בחר מידה');
+  cart.push({name:current.name,price:current.price,size:sz});
+  saveCart(); openCart();
 }
-
-// ⚡ כאן הכפתור להוביל ל-Checkout
-function checkout() {
-    if(cart.length === 0){alert('סל הקניות ריק!'); return;}
-    document.getElementById('cartDrawer').style.left='-380px';
-    document.getElementById('checkoutSection').style.display='block';
-    document.getElementById('checkoutSection').scrollIntoView({behavior:'smooth'});
+function checkout(){
+  document.getElementById('cartDrawer').style.left='-380px';
+  document.getElementById('thankYou').style.display='block';
+  const orderNum = '#' + Math.floor(Math.random()*9000+1000);
+  document.getElementById('orderInfo').innerText='מספר הזמנה ' + orderNum + '\nסה"כ לתשלום: ₪' + cart.reduce((a,b)=>a+b.price,0);
+  cart=[]; saveCart();
 }
-
-function confirmOrder(){
-    let discount=0;
-    const couponInput=document.getElementById('coupon');
-    if(couponInput.value==='YANIS25'){discount=0.1; alert('קופון 10% הנחה הופעל!');}
-    let totalPrice=0;
-    cart.forEach(i=>{totalPrice+=i.price});
-    const finalTotal = totalPrice - totalPrice*discount;
-    const orderNum = '#' + Math.floor(Math.random()*9000+1000);
-    document.getElementById('checkoutSection').style.display='none';
-    document.getElementById('thankYou').style.display='block';
-    document.getElementById('orderInfo').innerHTML=
-        `מספר הזמנה: ${orderNum}<br>
-         שם: ${document.getElementById('name').value}<br>
-         כתובת: ${document.getElementById('address').value}<br>
-         מספר דלת: ${document.getElementById('door').value || '-'}<br>
-         קומה: ${document.getElementById('floor').value || '-'}<br>
-         קופון: ${couponInput.value || '-'}<br>
-         סה"כ לתשלום: ₪${finalTotal}<br>
-         יש לשלוח את פרטי ההזמנה בפרטי באינסטגרם`;
-    cart=[];
-    saveCart();
-}
-
 updateCart();
 </script>
 </body>
